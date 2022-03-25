@@ -2,11 +2,11 @@ public class BlackjackPlayer {
     public BlackjackPlayer(){}
 
     public boolean applyBet(int bet){
-        return false;
+        return true;
     };
 
     public int getBalance() {
-        return 0;
+        return 10000;
     }
 
     public String getName() {
