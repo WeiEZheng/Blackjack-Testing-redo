@@ -11,22 +11,119 @@ public class Blackjack {
     private final IOConsole console = new IOConsole(AnsiColor.BLUE);
     private Map<BlackjackPlayer, List<Card>> playerHand = new HashMap<>();
     private Map<BlackjackPlayer, Boolean> blackjack = new HashMap<>();
+    private Map<BlackjackPlayer, Boolean> aceFlag = new HashMap<>();
+    private Map<BlackjackPlayer, Integer> playerHandSum = new HashMap<>();
+    private Map<BlackjackPlayer, Integer> playerBet= new HashMap<>();
+    private Map<BlackjackPlayer, Boolean> winLose = new HashMap<>();
+    private BlackjackPlayer dealer = new BlackjackPlayer();
 
     public Blackjack(){}
 
     public void play(List<BlackjackPlayer> playerList){
         boolean succeed = false;
         int bet;
-        for (BlackjackPlayer player:playerList) {
+        Card temp;
+        for (BlackjackPlayer player:playerList) { //Setup
             bet = getBet(player);
             setBet(player, bet);
-            playerHand.put(player, drawFirst2Cards(player));
-            if (blackjackCheck(player)){
-                blackjack.put(player, true);
-            }
-            aceCheckFlag;
-            sumHand();
         }
+        playerList.add(dealer);
+        for (int i =0; i<2;i++){ //Game starting
+            for (BlackjackPlayer player: playerList){
+                if (playerHand.get(player)==null)
+                    playerHand.put(player, new ArrayList<>());
+                playerHand.get(player).add(draw());
+            }
+        }
+        for (BlackjackPlayer player:playerList){ //First round flag checks
+            blackjack.put(player, blackjackCheck(player));
+            aceFlag.put(player, aceCheck(player));
+            playerHandSum.put(player, sumHand(playerHand.get(player)));
+        }
+        String input;
+        for (BlackjackPlayer player: playerList) {
+            if (blackjack.get(dealer)){
+                break;
+            }
+            while (true) {
+                if (player.equals(dealer))
+                    break;
+                System.out.println(displayCard(playerHand.get(dealer),"Dealer", 1));
+                System.out.println(displayCard(playerHand.get(player), player.getName()));
+                if (blackjack.get(player))
+                    break;
+                if (bustCheck(player).equals("Busted!")) {
+                    break;
+                }
+                input = console.getStringInput(player.getName() + ", do you want to hit, double, or stay?");
+                if (input.equalsIgnoreCase("hit")) {
+                    temp = draw();
+                    playerHand.get(player).add(temp);
+                    playerHandSum.put(player, addToSum(temp, player));
+                    if (temp.getCardFace().equals(CardFace.Ace))
+                        aceFlag.put(player,true);
+                } else if (input.equalsIgnoreCase("stay"))
+                    break;
+                else if (input.equalsIgnoreCase("double")) {
+                    temp = draw();
+                    playerHand.get(player).add(temp);
+                    playerHandSum.put(player, addToSum(temp, player));
+                    if (temp.getCardFace().equals(CardFace.Ace))
+                        aceFlag.put(player,true);
+                    setBet(player,playerBet.get(player)*2);
+                    break;
+                }
+            }
+        }
+        if (!blackjack.get(dealer) && winLose.containsValue(null)) {
+            while (playerHandSum.get(dealer) < 17) {
+                temp = draw();
+                playerHand.get(dealer).add(temp);
+                playerHandSum.put(dealer, addToSum(temp, dealer));
+            }
+        }
+        System.out.println(displayCard(playerHand.get(dealer),"Dealer"));
+        System.out.println("For a total of "+playerHandSum.get(dealer));
+        winningchek;
+        postGameChecklist;
+    }
+
+    public void winConditionCheck(BlackJackPlayer blackJackPlayer) {
+        int playerSum = playerHandSum.get(blackJackPlayer);
+        if (dealerBlackJack) {
+            if (blackJackFlag.get(blackJackPlayer))
+                this.winLose.put(blackJackPlayer, true);
+            else
+                this.winLose.put(blackJackPlayer, false);
+        }
+        else if (dealerHandSum>21){
+            if (playerSum>21)
+                this.winLose.put(blackJackPlayer,false);
+            else
+                this.winLose.put(blackJackPlayer,true);
+        }
+        else {
+            if (blackJackFlag.get(blackJackPlayer))
+                this.winLose.put(blackJackPlayer, true);
+            else if (playerSum > dealerHandSum && playerSum <= 21)
+                this.winLose.put(blackJackPlayer, true);
+            else
+                this.winLose.put(blackJackPlayer, false);
+        }
+    }
+
+    public boolean bustCheck(List<Card> hand, BlackjackPlayer player) {
+        while (playerHandSum.get(player) > 21) {
+            if (aceFlag.get(player)) {
+                playerHandSum.put(player, playerHandSum.get(player)-10);
+                aceFlag.put(player, false);
+            } else {
+                winLose.put(player, false);
+                System.out.println("Busted!");
+                return "Busted!";
+            }
+        }
+        return "";
     }
 
     public boolean blackjackCheck(BlackjackPlayer player) {
@@ -49,12 +146,13 @@ public class Blackjack {
         return false;
     }
 
-    public int sumHand(List<Card> list){
-        int value = 0;
-        for (Card hand: list){
-            value+=cardValue(hand);
-        }
-        return value;
+    public Card draw(){return deck.getTopCard();}
+
+    public List<Card> drawFirst2Cards(){
+        List hand = new ArrayList<>();
+        hand.add(draw());
+        hand.add(draw());
+        return hand;
     }
 
     public int cardValue(Card card){
@@ -76,7 +174,36 @@ public class Blackjack {
         return value;
     }
 
+    public int sumHand(List<Card> list){
+        int value = 0;
+        for (Card hand: list){
+            value+=cardValue(hand);
+        }
+        return value;
+    }
+
+    public int addToSum(Card card, BlackjackPlayer player){
+        return playerHandSum.get(player)+cardValue(card);
+    }
+
+    public Boolean aceCheck(BlackjackPlayer player) {
+        for (Card card: playerHand.get(player)){
+            if (card.getCardFace().equals(CardFace.Ace)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public Boolean aceCheck(Card card) {
+        if (card.getCardFace().equals(CardFace.Ace))
+            return true;
+        return false;
+    }
+
     public boolean setBet(BlackjackPlayer player, int bet) {
+        playerBet.put(player, bet);
         return player.applyBet(bet);
     }
 
@@ -91,12 +218,18 @@ public class Blackjack {
         return bet;
     }
 
-    public Card draw(){return deck.getTopCard();}
+    public String displayCard(List<Card> hand, String name){
+        String cards= name+" has:\n";
+        for (Card s: hand){
+            cards+=s.toString()+", ";
+        }
+        return cards;
+    }
 
-    public List<Card> drawFirst2Cards(BlackjackPlayer player){
-        List hand = new ArrayList<>();
-        hand.add(draw());
-        hand.add(draw());
-        return hand;
+    public String displayCard(List<Card> hand, String name, int index){
+        List<Card> tempHand= new ArrayList<>();
+        for (int i=0;i<index;i++)
+            tempHand.add(hand.get(i));
+        return displayCard(tempHand, name);
     }
 }
