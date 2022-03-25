@@ -1,15 +1,34 @@
+import org.omg.PortableServer.POAPackage.ObjectAlreadyActive;
+
 public class BlackjackPlayer {
-    public BlackjackPlayer(){}
+    private int balance;
+    private String name;
+
+    public BlackjackPlayer(){
+        this("",1);
+    }
+
+    public BlackjackPlayer(String name, int balance){
+        this.name=name;
+        this.balance=balance;
+    }
 
     public boolean applyBet(int bet){
-        return true;
-    };
+        if (bet<balance)
+            balance-=bet;
+        return false;
+    }
 
     public int getBalance() {
-        return 10000;
+        return balance;
     }
 
     public String getName() {
-        return "";
+        return name;
+    }
+
+    public int wins(Integer winning) {
+        balance+=winning;
+        return balance;
     }
 }

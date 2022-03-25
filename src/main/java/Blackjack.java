@@ -38,7 +38,7 @@ public class Blackjack {
         }
         for (BlackjackPlayer player:playerList){ //First round flag checks
             blackjack.put(player, blackjackCheck(playerHand.get(player)));
-            aceFlag.put(player, aceCheck(player));
+            aceFlag.put(player, aceCheck(playerHand.get(player)));
             playerHandSum.put(player, sumHand(playerHand.get(player)));
         }
         String input;
@@ -92,21 +92,16 @@ public class Blackjack {
             }
             System.out.println(displayCard(playerHand.get(player),player.getName()));
             System.out.println(player.getName()+" got a total of "+playerHandSum.get(player));
-            if (winConditionCheck(player, playerHandSum.get(player)))
-                System.out.println(player.getName()+" wins!");
+            if (winConditionCheck(player, playerHandSum.get(player))) {
+                player.wins(playerBet.get(player));
+                System.out.println(player.getName() + " wins!");
+            }
              else
                 System.out.println(player.getName()+" loses!");
         }
     }
 
     public Card draw(){return deck.getTopCard();}
-
-    public List<Card> drawFirst2Cards(){
-        List hand = new ArrayList<>();
-        hand.add(draw());
-        hand.add(draw());
-        return hand;
-    }
 
     public int cardValue(Card card){
         int value = 0;
@@ -139,8 +134,8 @@ public class Blackjack {
         return playerHandSum.get(player)+cardValue(card);
     }
 
-    public Boolean aceCheck(BlackjackPlayer player) {
-        for (Card card: playerHand.get(player)){
+    public Boolean aceCheck(List<Card> cards) {
+        for (Card card: cards){
             if (card.getCardFace().equals(CardFace.Ace)){
                 return true;
             }
