@@ -14,7 +14,7 @@ public class BlackjackPlayer {
     }
 
     public boolean applyBet(int bet){
-        if (bet<balance)
+        if (bet<=balance)
             balance-=bet;
         return false;
     }
@@ -27,8 +27,8 @@ public class BlackjackPlayer {
         return name;
     }
 
-    public int wins(Integer winning) {
-        balance+=winning;
+    public int wins(Integer bet) {
+        balance+=bet*2;
         return balance;
     }
 }

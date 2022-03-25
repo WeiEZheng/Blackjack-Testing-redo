@@ -25,14 +25,12 @@ public class Blackjack {
         Card temp;
         for (BlackjackPlayer player:playerList) { //Setup
             bet = getBet(player);
-            setBet(player, bet);
-            bustedFlag.put(player,false);
+            setUp(player, bet);
         }
         playerList.add(dealer);
+        dealerFlag();
         for (int i =0; i<2;i++){ //Game starting
             for (BlackjackPlayer player: playerList){
-                if (playerHand.get(player)==null)
-                    playerHand.put(player, new ArrayList<>());
                 playerHand.get(player).add(draw());
             }
         }
@@ -53,7 +51,7 @@ public class Blackjack {
                 System.out.println(displayCard(playerHand.get(player), player.getName()));
                 if (blackjack.get(player))
                     break;
-                if (bustCheck(playerHand.get(player), player)) {
+                if (bustCheck(playerHandSum.get(player), player)) {
                     bustedFlag.put(player, true);
                     break;
                 }
@@ -61,7 +59,7 @@ public class Blackjack {
                 if (input.equalsIgnoreCase("hit")) {
                     temp = draw();
                     playerHand.get(player).add(temp);
-                    playerHandSum.put(player, addToSum(temp, player));
+                    playerHandSum.put(player, addToSum(temp, playerHandSum.get(player)));
                     if (aceCheck(temp))
                         aceFlag.put(player,true);
                 } else if (input.equalsIgnoreCase("stay"))
@@ -69,7 +67,7 @@ public class Blackjack {
                 else if (input.equalsIgnoreCase("double")) {
                     temp = draw();
                     playerHand.get(player).add(temp);
-                    playerHandSum.put(player, addToSum(temp, player));
+                    playerHandSum.put(player, addToSum(temp, playerHandSum.get(player)));
                     if (aceCheck(temp))
                         aceFlag.put(player,true);
                     setBet(player,playerBet.get(player)*2);
@@ -78,27 +76,54 @@ public class Blackjack {
             }
         }
         if (!blackjack.get(dealer) && bustedFlag.containsValue(false)) {
-            while (playerHandSum.get(dealer) < 17) {
-                temp = draw();
-                playerHand.get(dealer).add(temp);
-                playerHandSum.put(dealer, addToSum(temp, dealer));
-            }
+            bustedFlag.put(dealer, dealerPlays(playerHandSum.get(dealer)));
         }
-        System.out.println(displayCard(playerHand.get(dealer),"Dealer"));
-        System.out.println("For a total of "+playerHandSum.get(dealer));
         for (BlackjackPlayer player: playerList){
             if (player.equals(dealer)){
                 continue;
             }
-            System.out.println(displayCard(playerHand.get(player),player.getName()));
-            System.out.println(player.getName()+" got a total of "+playerHandSum.get(player));
-            if (winConditionCheck(player, playerHandSum.get(player))) {
-                player.wins(playerBet.get(player));
-                System.out.println(player.getName() + " wins!");
+            if (player.equals(dealer)){
+                return;
             }
-             else
-                System.out.println(player.getName()+" loses!");
+            postGameEval(player, winConditionCheck(player, playerHandSum.get(player)));
         }
+    }
+
+    public void dealerFlag(){
+        setUp(dealer,0);
+    }
+
+    public void setUp(BlackjackPlayer player, int bet){
+        setBet(player, bet);
+        bustedFlag.put(player,false);
+        aceFlag.put(player,false);
+        blackjack.put(player,false);
+        playerHand.put(player, new ArrayList<>());
+    }
+
+    public boolean dealerPlays(int handSum){
+        Card temp;
+        int tempTotalSum= handSum;
+        while (tempTotalSum < 17) {
+            temp = draw();
+            playerHand.get(dealer).add(temp);
+            tempTotalSum = addToSum(temp, tempTotalSum);
+        }
+        playerHandSum.put(dealer, tempTotalSum);
+        System.out.println(displayCard(playerHand.get(dealer),"Dealer"));
+        System.out.println("For a total of "+playerHandSum.get(dealer));
+        return bustCheck(playerHandSum.get(dealer), dealer);
+    }
+
+    public void postGameEval(BlackjackPlayer player, Boolean win){
+        if (win) {
+            player.wins(playerBet.get(player));
+            System.out.println(player.getName() + " wins!");
+        }
+        else
+            System.out.println(player.getName()+" loses!");
+        System.out.println(displayCard(playerHand.get(player),player.getName()));
+        System.out.println(player.getName()+" got a total of "+playerHandSum.get(player));
     }
 
     public Card draw(){return deck.getTopCard();}
@@ -130,8 +155,8 @@ public class Blackjack {
         return value;
     }
 
-    public int addToSum(Card card, BlackjackPlayer player){
-        return playerHandSum.get(player)+cardValue(card);
+    public int addToSum(Card card, int currentSum){
+        return currentSum+cardValue(card);
     }
 
     public Boolean aceCheck(List<Card> cards) {
@@ -200,10 +225,10 @@ public class Blackjack {
         return false;
     }
 
-    public Boolean bustCheck(List<Card> hand, BlackjackPlayer player) {
-        while (playerHandSum.get(player) > 21) {
+    public Boolean bustCheck(int sum, BlackjackPlayer player) {
+        while (sum > 21) {
             if (aceFlag.get(player)) {
-                playerHandSum.put(player, playerHandSum.get(player)-10);
+                playerHandSum.put(player, sum-10);
                 aceFlag.put(player, false);
             } else {
                 System.out.println("Busted!");
@@ -214,7 +239,7 @@ public class Blackjack {
     }
 
     public boolean winConditionCheck(BlackjackPlayer blackJackPlayer, int playerSum) {
-        if (blackjack.get(dealer)) {
+        if (blackjack.get(dealer)!=null && blackjack.get(dealer)) {
             if (blackjack.get(blackJackPlayer))
                 return true;
             else
