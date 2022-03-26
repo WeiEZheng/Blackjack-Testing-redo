@@ -40,6 +40,7 @@ public class Blackjack {
             playerHandSum.put(player, sumHand(playerHand.get(player)));
         }
         String input;
+        boolean option;
         for (BlackjackPlayer player: playerList) {
             if (blackjack.get(dealer)){
                 break;
@@ -56,23 +57,9 @@ public class Blackjack {
                     break;
                 }
                 input = console.getStringInput(player.getName() + ", do you want to hit, double, or stay?");
-                if (input.equalsIgnoreCase("hit")) {
-                    temp = draw();
-                    playerHand.get(player).add(temp);
-                    playerHandSum.put(player, addToSum(temp, playerHandSum.get(player)));
-                    if (aceCheck(temp))
-                        aceFlag.put(player,true);
-                } else if (input.equalsIgnoreCase("stay"))
+                option = playOption(input, player);
+                if (option)
                     break;
-                else if (input.equalsIgnoreCase("double")) {
-                    temp = draw();
-                    playerHand.get(player).add(temp);
-                    playerHandSum.put(player, addToSum(temp, playerHandSum.get(player)));
-                    if (aceCheck(temp))
-                        aceFlag.put(player,true);
-                    setBet(player,playerBet.get(player)*2);
-                    break;
-                }
             }
         }
         if (!blackjack.get(dealer) && bustedFlag.containsValue(false)) {
@@ -89,6 +76,29 @@ public class Blackjack {
         }
     }
 
+    public boolean playOption(String input, BlackjackPlayer player){
+        Card temp;
+        if (input.equalsIgnoreCase("hit")) {
+            temp = draw();
+            playerHand.get(player).add(temp);
+            playerHandSum.put(player, addToSum(temp, playerHandSum.get(player)));
+            if (aceCheck(temp))
+                aceFlag.put(player,true);
+            return false;
+        } else if (input.equalsIgnoreCase("stay"))
+            return true;
+        else if (input.equalsIgnoreCase("double")) {
+            temp = draw();
+            playerHand.get(player).add(temp);
+            playerHandSum.put(player, addToSum(temp, playerHandSum.get(player)));
+            if (aceCheck(temp))
+                aceFlag.put(player,true);
+            setBet(player,playerBet.get(player)*2);
+            return true;
+        }
+        return false;
+    }
+
     public void dealerFlag(){
         setUp(dealer,0);
     }
@@ -99,6 +109,7 @@ public class Blackjack {
         aceFlag.put(player,false);
         blackjack.put(player,false);
         playerHand.put(player, new ArrayList<>());
+        playerHandSum.put(player, 0);
     }
 
     public boolean dealerPlays(int handSum){
@@ -108,6 +119,9 @@ public class Blackjack {
             temp = draw();
             playerHand.get(dealer).add(temp);
             tempTotalSum = addToSum(temp, tempTotalSum);
+            if (aceCheck(temp))
+                aceFlag.put(dealer, true);
+            bustCheck(tempTotalSum, dealer);
         }
         playerHandSum.put(dealer, tempTotalSum);
         System.out.println(displayCard(playerHand.get(dealer),"Dealer"));

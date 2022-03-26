@@ -151,4 +151,16 @@ class BlackjackTest {
         blackjack.dealerPlays(8);
         Assertions.assertFalse(blackjack.winConditionCheck(player,8));
     }
+
+    @Test
+    void playerOptionTest(){
+        BlackjackPlayer player = new BlackjackPlayer();
+        blackjack.setUp(player,0);
+        boolean option1 = blackjack.playOption("hit", player);
+        boolean option2 = blackjack.playOption("stay", player);
+        boolean option3 = blackjack.playOption("double", player);
+        Assertions.assertFalse(option1);
+        Assertions.assertTrue(option2);
+        Assertions.assertTrue(option3);
+    }
 }
